@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conversation Tracker</title>
+<style>
+:root{color-scheme:dark;font-family:"Segoe UI",Arial,sans-serif;background:#10151f;color:#e3ebf5;font-size:14px}
+*{box-sizing:border-box}body{margin:0}button,select,input{font:inherit;accent-color:#4cdbca}button,select{background:#202a38;color:#e3ebf5;border:1px solid #3b4b5e;border-radius:6px;padding:8px 12px}button{cursor:pointer}button:hover{border-color:#4cdbca}button:disabled,input:disabled{opacity:.4;cursor:default}button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid #4cdbca;outline-offset:3px}[hidden]{display:none!important}
+.app{height:100dvh;min-height:650px;display:grid;grid-template-rows:auto auto minmax(240px,1fr) auto auto;max-width:1800px;margin:auto}header{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;padding:24px 30px 16px}h1{font-size:21px;font-weight:500;letter-spacing:-.3px;margin:0}.subtitle{color:#91a3b8;font-size:12px;margin:5px 0 0}.selectors{display:flex;gap:18px;flex-wrap:wrap}label{display:flex;align-items:center;gap:9px;color:#aab9cb;font-size:12px}label select{color:#e3ebf5}.controls{display:flex;align-items:center;flex-wrap:wrap;gap:14px 24px;padding:12px 30px;border-top:1px solid #243040;border-bottom:1px solid #243040}.transport{display:flex;gap:8px}#play{background:#4cdbca;color:#0b2020;border-color:#4cdbca;min-width:84px;font-weight:600}.parameter{gap:10px}.parameter input{width:100px}.parameter output{color:#e3ebf5;min-width:30px;font-variant-numeric:tabular-nums}.hint{color:#7f91a6;font-size:11px;margin:0 0 0 auto}.stage{position:relative;overflow:hidden;min-width:0}canvas,#pca{display:block;width:100%;height:100%;position:absolute;inset:0}.stage-label{position:absolute;top:20px;left:30px;font-size:10px;letter-spacing:1.6px;color:#7f91a6;pointer-events:none}.stage-label span{display:block;margin-top:6px;letter-spacing:0;color:#536d76}.timeline{padding:16px 30px 8px;display:flex;align-items:center;gap:16px}.timeline input{width:100%;min-width:0}.timeline output{font-size:12px;white-space:nowrap;color:#aab9cb;font-variant-numeric:tabular-nums}.sentence-panel{padding:8px 30px 18px;min-width:0}.sentence-meta{display:flex;justify-content:space-between;align-items:center;gap:12px;color:#80bdb6;font-size:11px;letter-spacing:.6px}#sentence{font-size:19px;line-height:1.5;margin:8px 0 15px;max-height:145px;overflow-y:auto;overflow-wrap:anywhere}footer{color:#72859b;font-size:11px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}a{color:#8faac4}#pca-notice{margin-left:auto;color:#91a3b8;font-size:12px}
+@media(max-width:700px){header{padding:18px 18px 12px;gap:14px}.selectors{gap:12px}.controls{padding:12px 18px;gap:12px 18px}.hint{width:100%;margin:0}.stage-label{left:18px}.timeline{padding:12px 18px 6px}.sentence-panel{padding:8px 18px 16px}#sentence{font-size:17px}.parameter input{width:80px}.app{min-height:760px}h1{font-size:20px}}
+</style>
+</head>
+<body>
+<main class="app">
+  <header>
+    <div><h1>Conversation Tracker</h1><p class="subtitle">Semantic continuity, one sentence at a time.</p></div>
+    <div class="selectors">
+      <label for="meeting">Meeting <select id="meeting"></select></label>
+      <label for="view">View <select id="view"><option value="thread">Future-aware thread</option><option value="causal">Original causal thread</option><option value="pca">PCA comparison</option></select></label>
+    </div>
+  </header>
+  <section class="controls" aria-label="Playback and trajectory controls">
+    <div class="transport"><button id="play" type="button">Pause</button><button id="restart" type="button">Restart</button></div>
+    <label class="parameter" for="speed">Speed <input id="speed" type="range" min="0.25" max="4" step="0.25" value="1"><output id="speed-value" for="speed">1×</output></label>
+    <label class="parameter" id="causal-context" for="context" hidden>Context K <input id="context" type="range" min="1" max="30" step="1" value="5"><output id="context-value" for="context">5</output></label>
+    <label id="lookahead-label" for="lookahead">Lookahead <select id="lookahead"></select></label>
+    <label class="parameter" for="turn">Max turn <input id="turn" type="range" min="0" max="120" step="5" value="60"><output id="turn-value" for="turn">60°</output></label>
+    <p class="hint" id="context-hint">Past context: 128 tokens. Lookahead buffers incoming sentences.</p>
+  </section>
+  <section class="stage" aria-label="Conversation visualization">
+    <canvas id="thread" role="img" aria-label="Animated semantic conversation thread"></canvas>
+    <div id="thread-label" class="stage-label">FUTURE-AWARE THREAD<span>Following the moving tip</span></div>
+    <div id="pca" hidden></div>
+  </section>
+  <section class="timeline" aria-label="Sentence timeline">
+    <label for="timeline">Timeline</label><input id="timeline" type="range" min="1" max="374" step="0.001" value="1" aria-label="Sentence timeline">
+    <output id="position" for="timeline">1 / 374</output>
+  </section>
+  <section class="sentence-panel" aria-label="Current sentence">
+    <div class="sentence-meta"><span id="sentence-number">SENTENCE 1</span><span id="status" role="status">Playing</span></div>
+    <p id="alignment" class="subtitle"></p>
+    <p id="sentence"></p>
+    <footer><span><a href="https://groups.inf.ed.ac.uk/ami/download/" target="_blank" rel="noopener">AMI Meeting Corpus</a> · CC BY 4.0</span><span>Experimental semantic visualization · All transcript sentences retained</span></footer>
+  </section>
+</main>
+<script id="meeting-data" type="application/json">@@DATA@@</script>
+<script>@@PLOTLY@@</script>
+<script>@@MATH@@</script>
+<script>@@PLAYBACK@@</script>
+<script>@@VIEWER@@</script>
+</body>
+</html>
